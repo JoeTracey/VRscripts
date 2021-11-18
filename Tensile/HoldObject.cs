@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Script to hold, split, and conduct tensile testing, as well as print out sample results 
+
 public class HoldObject : MonoBehaviour
 {
   [SerializeField]
@@ -76,10 +78,11 @@ public class HoldObject : MonoBehaviour
       Vector3 bottomClampStart = bottomClamp.transform.position;
     }
 
+    // Call when sample is being held and enters the collider
     void OnTriggerEnter(Collider obj)
 
     {
-      if (!isHolding && obj.tag == "Sample1")
+      if (!isHolding && obj.tag == "Sample1") //Handle basic test samples
       {
         Debug.Log(obj.tag);
         OVRGrabbable grabbableScript = obj.gameObject.GetComponent<OVRGrabbable>();
@@ -99,7 +102,7 @@ public class HoldObject : MonoBehaviour
         sampletype = "Sample1";
         currentSample = obj.gameObject;
       }
-      if (!isHolding && obj.tag == "SampleTensile" && !splitting)
+      if (!isHolding && obj.tag == "SampleTensile" && !splitting) //Handle dog bone tensile samples
       {
         Debug.Log(obj.tag);
         OVRGrabbable grabbableScript = obj.gameObject.GetComponent<OVRGrabbable>();
@@ -111,7 +114,7 @@ public class HoldObject : MonoBehaviour
         lowrightTooth.transform.position += new Vector3(0,0,.047f);
         highleftTooth.transform.position -= new Vector3(0,0,.0495f);
         highrightTooth.transform.position += new Vector3(0,0,.047f);
-        isHolding = true;
+        isHolding = true; //Flag to allow testing station to start
         Transform trans= obj.gameObject.GetComponent<Transform>();
 
         trans.position = lowleftTooth.transform.position  + new Vector3(.0f,.12f,-0.034f);
@@ -120,21 +123,21 @@ public class HoldObject : MonoBehaviour
         animtype= "ductile";
         currentSample = obj.gameObject;
         sampleTempIndex = currentSample.GetComponent<SampleFunctions>().sampleTempIndex;
-        if (sampleTempIndex==0) //Regular
+        if (sampleTempIndex==0) //Regular sample flag
           {
         shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().shapeKeyIndex;
         maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepth;
         deltTot = currentSample.GetComponent<SampleFunctions>().deltSize;
 
           }
-        if (sampleTempIndex==1) //Hot
+        if (sampleTempIndex==1) //Hot sample flag
           {
         shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().hotShapeKeyIndex;
         maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepthHot;
         deltTot = currentSample.GetComponent<SampleFunctions>().hotDeltSize;
 
           }
-        if (sampleTempIndex==3) //Cold
+        if (sampleTempIndex==3) //Cold sample flag
           {
         shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().coldShapeKeyIndex;
         maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepthCold;
@@ -147,15 +150,9 @@ public class HoldObject : MonoBehaviour
     }
   }
 
-    void OnTriggerExit(Collider obj)
+    void OnTriggerExit(Collider obj) // call Reset() and enable gravity if sample is removed by user
     {
-      if (isHolding && obj.tag == "Sample1")
-      {
-        Rigidbody rigid= obj.gameObject.GetComponent<Rigidbody>();
-        rigid.isKinematic=true;
-        Reset();
-      }
-      if (isHolding && obj.tag == "SampleTensile" && !splitting)
+      if (isHolding && obj.tag == "Sample1" || isHolding && obj.tag == "SampleTensile" && !splitting )
       {
         Rigidbody rigid= obj.gameObject.GetComponent<Rigidbody>();
         rigid.isKinematic=true;
@@ -167,89 +164,76 @@ public class HoldObject : MonoBehaviour
     void TensileTest()
     {
       Debug.Log("Tensile Testing");
-      if (isHolding && sampletype == "SampleTensile" && hasTested == false)
+      if (isHolding && sampletype == "SampleTensile" && hasTested == false) //only activate if test is not started yet but conditions are met
       {
         GetSampleChildren(currentSample);
-        hasTested = true;
-        isTesting = true;
-        // maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepth;
-        // deltTot = currentSample.GetComponent<SampleFunctions>().deltSize;
-        //topClamp.gameObject.GetComponent<FixedJoint>().connectedBody=currentSample.GetComponent<Rigidbody>();
-
-        //topClamp.gameObject.GetComponent<FixedJoint>().connectedBody=topClamp.GetComponent<Rigidbody>();
-
+        hasTested = true; //prevents TensileTest() from being called twice
+        isTesting = true; //ensures Update() continues test
       }
     }
 
     void Update()
     {
-      if (isTesting == true)
+      if (isTesting == true) //update deformation for active test
       {
-        if (currentShapeVal <= maxShapeVal){
+        if (currentShapeVal <= maxShapeVal){ //only call if maxShapeVal is not met yet
         Debug.Log(currentShapeVal);
-        currentShapeVal += Time.deltaTime*2f + currentShapeVal/200;
+        currentShapeVal += Time.deltaTime*2f + currentShapeVal/200; //update based on time since last call
+        //set shapekey
         bottomOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, currentShapeVal);
         topOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, currentShapeVal);
+        //move clamp to move same distance as deformation
         bottomClamp.transform.position -= new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
         topClamp.transform.position += new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
         Debug.Log("moving clamp");
-        lastShapeVal = currentShapeVal;}
-        if (currentShapeVal >= maxShapeVal)
+        lastShapeVal = currentShapeVal;} //remember last shapekey value for proper delta next call
+
+        if (currentShapeVal >= maxShapeVal) //turn off testing station if maximum deformation is reached
         {
-          isTesting = false;
-          split(currentSample);
-          PrintGraph();
-          // currentShapeVal=100f;
+          isTesting = false; //prevents further deformation
+          split(currentSample); //replace sample with two broken pieces
+          PrintGraph(); //print results for user to compare
           }
-        // bottomOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, maxShapeVal);
-        // topOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, maxShapeVal);
-        // bottomClamp.transform.position -= new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
-        // topClamp.transform.position += new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
-        // Debug.Log("moving clamp");
-        // lastShapeVal = currentShapeVal;
-        // if (currentShapeVal == 100f)
-        // {
-        //   split(currentSample);
-        //   PrintGraph();
-        // }
       }
     }
     void split(GameObject sample)
     {
       splitting=true;
-      //record position of top and bottomsampleHalf
-      //bottomSampleLoc = sample.gameObject.GetComponent<Transform>().position+ new Vector3(deltTot,0,0);
-      //topSampleLoc = sample.gameObject.GetComponent<Transform>().position+ new Vector3(-deltTot,0,0);
+      //store sample transformations
       sampleLoc=sample.gameObject.GetComponent<Transform>().position;
       samplerot=sample.gameObject.GetComponent<Transform>().rotation;
-      if (sampleTempIndex == 0)
+      if (sampleTempIndex == 0) //replace sample with split untreated clone
       {
       sampleClone = sample.GetComponent<SampleFunctions>().clone;
       }
-      if (sampleTempIndex == 1)
+      if (sampleTempIndex == 1) //replace sample with hot split clone
       {
       sampleClone = sample.GetComponent<SampleFunctions>().cloneHot;
       }
-      if (sampleTempIndex == 3)
+      if (sampleTempIndex == 3) //replace sample with cold split clone
       {
       sampleClone = sample.GetComponent<SampleFunctions>().cloneCold;
       }
       //get rid of sample
       sample.transform.position += new Vector3(-100f, 0,0);
-      //add new samples
+      //add clone at proper orientation, which contains proper shapekeys for deformation
       sampleClone.transform.position= sampleLoc;
       sampleClone.transform.rotation=samplerot;
+      //ensure sample is set to 0 shapekey
       bottomOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, 0);
       topOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, 0);
       //splitting=false;
     }
+
+    //Activate function to be called by physical start button
     public void Activate()
     {
+      //Attempt to start testing station
       TensileTest();
     }
 
 
-    void GetSampleChildren(GameObject sample)
+    void GetSampleChildren(GameObject sample) //obtain top and bottom portions of sample to treat seperately
     {
       sampleParts.Clear();
       foreach(Transform child in sample.GetComponent<Transform>())
@@ -263,9 +247,11 @@ public class HoldObject : MonoBehaviour
     }
 
 
-    public void Reset()
+    public void Reset() //Reset testing station, linked to reset button on machine
     {
       Debug.Log("Called Reset");
+
+      //move teeth on clamps back to closed position
       if (isHolding && sampletype == "Sample1")
       {
       isHolding = false;
@@ -281,6 +267,8 @@ public class HoldObject : MonoBehaviour
      lowrightTooth.transform.position -= new Vector3(0,0,.047f);
      highleftTooth.transform.position += new Vector3(0,0,.0495f);
      highrightTooth.transform.position -= new Vector3(0,0,.047f);
+
+     //adjust clamps along y (height) axis if test was completed
      if (splitting)
      {
          Debug.Log("Reset Was Called");
@@ -295,17 +283,16 @@ public class HoldObject : MonoBehaviour
     }
     }
 
-        public void PrintGraph()
+        public void PrintGraph() //print out graph linked to sample that was just tested
     {
       heatVal = currentSample.GetComponent<SampleFunctions>().sampleTempIndex;
+      //obtain correct graph
       if (heatVal == 0){page = currentSample.GetComponent<SampleFunctions>().originalGraph;}
       if (heatVal == 1){page = currentSample.GetComponent<SampleFunctions>().hotGraph;}
       if (heatVal == 3){page = currentSample.GetComponent<SampleFunctions>().coldGraph;}
-      
-      // page.GetComponent<Transform>().position =PrintedPosition;
+      //drop page into machines printer
       page.transform.GetComponent<Transform>().position =PrintedPosition.GetComponent<Transform>().position;
       page.transform.GetComponent<Transform>().rotation =PrintedPosition.GetComponent<Transform>().rotation;
-      // page.transform.rotation =Quaternion.Euler(90,0,0);
     }
 
 
