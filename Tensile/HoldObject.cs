@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class HoldObject : MonoBehaviour
 {
+  //Allow clamp parts to be specified through serialization
   [SerializeField]
   GameObject lowleftTooth;
   [SerializeField]
@@ -23,11 +24,16 @@ public class HoldObject : MonoBehaviour
   GameObject bottomClamp;
   [SerializeField]
   GameObject topClamp;
+  
+  [SerializeField]
+  GameObject PrintedPosition;
 
+  //Create objects to be referenced
   GameObject currentSample;
   GameObject bottomOfSample;
   GameObject topOfSample;
   GameObject sampleClone;
+  GameObject page;
   Vector3 llstart;
   Vector3 lrstart;
   Vector3 hlstart;
@@ -40,9 +46,14 @@ public class HoldObject : MonoBehaviour
   Vector3 bottomSampleLoc;
   Vector3 sampleLoc;
   Quaternion samplerot;
+  
+  List<GameObject> sampleParts = new List<GameObject>();
+  
   int maxShapeVal;
   int heatVal;
   int sampleTempIndex;
+
+  //Setting initial values
   int shapeKeyIndex = 0;
   string sampletype = "";
   string animtype = "";
@@ -58,11 +69,7 @@ public class HoldObject : MonoBehaviour
 
   float deltTot;
 
-  GameObject page;
-  
-  [SerializeField]
-  GameObject PrintedPosition;
-  List<GameObject> sampleParts = new List<GameObject>();
+
 
 
     // Start is called before the first frame update
@@ -147,8 +154,8 @@ public class HoldObject : MonoBehaviour
         Debug.Log(shapeKeyIndex);
         Debug.Log(maxShapeVal);
 
+      }
     }
-  }
 
     void OnTriggerExit(Collider obj) // call Reset() and enable gravity if sample is removed by user
     {
@@ -261,29 +268,29 @@ public class HoldObject : MonoBehaviour
       highrightTooth.transform.position += new Vector3(.03f,0,0);
      }
      if (isHolding && sampletype == "SampleTensile")
-     {
-     isHolding = false;
-     lowleftTooth.transform.position += new Vector3(0,0,.0485f);
-     lowrightTooth.transform.position -= new Vector3(0,0,.047f);
-     highleftTooth.transform.position += new Vector3(0,0,.0495f);
-     highrightTooth.transform.position -= new Vector3(0,0,.047f);
+      {
+      isHolding = false;
+      lowleftTooth.transform.position += new Vector3(0,0,.0485f);
+      lowrightTooth.transform.position -= new Vector3(0,0,.047f);
+      highleftTooth.transform.position += new Vector3(0,0,.0495f);
+      highrightTooth.transform.position -= new Vector3(0,0,.047f);
 
-     //adjust clamps along y (height) axis if test was completed
-     if (splitting)
-     {
-         Debug.Log("Reset Was Called");
-     splitting=false;
-     bottomClamp.transform.position += new Vector3(0,deltTot*maxShapeVal/100, 0);
-     topClamp.transform.position -= new Vector3(0,deltTot*maxShapeVal/100, 0);
-     currentShapeVal=0f;
-     lastShapeVal=0f;
-     hasTested=false;
-     deltTot = 0;
-     }
-    }
+      //adjust clamps along y (height) axis if test was completed
+      if (splitting)
+        {
+            Debug.Log("Reset Was Called");
+        splitting=false;
+        bottomClamp.transform.position += new Vector3(0,deltTot*maxShapeVal/100, 0);
+        topClamp.transform.position -= new Vector3(0,deltTot*maxShapeVal/100, 0);
+        currentShapeVal=0f;
+        lastShapeVal=0f;
+        hasTested=false;
+        deltTot = 0;
+        }
+      }
     }
 
-        public void PrintGraph() //print out graph linked to sample that was just tested
+    public void PrintGraph() //print out graph linked to sample that was just tested
     {
       heatVal = currentSample.GetComponent<SampleFunctions>().sampleTempIndex;
       //obtain correct graph
