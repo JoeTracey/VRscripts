@@ -48,7 +48,7 @@ public class HoldObject : MonoBehaviour
   Quaternion samplerot;
   
   List<GameObject> sampleParts = new List<GameObject>();
-  
+
   int maxShapeVal;
   int heatVal;
   int sampleTempIndex;
@@ -131,26 +131,24 @@ public class HoldObject : MonoBehaviour
         currentSample = obj.gameObject;
         sampleTempIndex = currentSample.GetComponent<SampleFunctions>().sampleTempIndex;
         if (sampleTempIndex==0) //Regular sample flag
-          {
-        shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().shapeKeyIndex;
-        maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepth;
-        deltTot = currentSample.GetComponent<SampleFunctions>().deltSize;
-
-          }
+        {
+          shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().shapeKeyIndex;
+          maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepth;
+          deltTot = currentSample.GetComponent<SampleFunctions>().deltSize;
+        }
         if (sampleTempIndex==1) //Hot sample flag
-          {
-        shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().hotShapeKeyIndex;
-        maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepthHot;
-        deltTot = currentSample.GetComponent<SampleFunctions>().hotDeltSize;
-
-          }
+        {
+          shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().hotShapeKeyIndex;
+          maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepthHot;
+          deltTot = currentSample.GetComponent<SampleFunctions>().hotDeltSize;
+        }
         if (sampleTempIndex==3) //Cold sample flag
-          {
-        shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().coldShapeKeyIndex;
-        maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepthCold;
-        deltTot = currentSample.GetComponent<SampleFunctions>().coldDeltSize;
+        {
+          shapeKeyIndex = currentSample.GetComponent<SampleFunctions>().coldShapeKeyIndex;
+          maxShapeVal = currentSample.GetComponent<SampleFunctions>().shapeKeyDepthCold;
+          deltTot = currentSample.GetComponent<SampleFunctions>().coldDeltSize;
 
-          }
+        }
         Debug.Log(shapeKeyIndex);
         Debug.Log(maxShapeVal);
 
@@ -183,24 +181,26 @@ public class HoldObject : MonoBehaviour
     {
       if (isTesting == true) //update deformation for active test
       {
-        if (currentShapeVal <= maxShapeVal){ //only call if maxShapeVal is not met yet
-        Debug.Log(currentShapeVal);
-        currentShapeVal += Time.deltaTime*2f + currentShapeVal/200; //update based on time since last call
-        //set shapekey
-        bottomOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, currentShapeVal);
-        topOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, currentShapeVal);
-        //move clamp to move same distance as deformation
-        bottomClamp.transform.position -= new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
-        topClamp.transform.position += new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
-        Debug.Log("moving clamp");
-        lastShapeVal = currentShapeVal;} //remember last shapekey value for proper delta next call
+        if (currentShapeVal <= maxShapeVal) //only call if maxShapeVal is not met yet
+        {
+          Debug.Log(currentShapeVal);
+          currentShapeVal += Time.deltaTime*2f + currentShapeVal/200; //update based on time since last call
+          //set shapekey
+          bottomOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, currentShapeVal);
+          topOfSample.gameObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(shapeKeyIndex, currentShapeVal);
+          //move clamp to move same distance as deformation
+          bottomClamp.transform.position -= new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
+          topClamp.transform.position += new Vector3(0,deltTot*(currentShapeVal-lastShapeVal)/100f, 0);
+          Debug.Log("moving clamp");
+          lastShapeVal = currentShapeVal; //remember last shapekey value for proper delta next call
+        }
 
         if (currentShapeVal >= maxShapeVal) //turn off testing station if maximum deformation is reached
         {
           isTesting = false; //prevents further deformation
           split(currentSample); //replace sample with two broken pieces
           PrintGraph(); //print results for user to compare
-          }
+        }
       }
     }
     void split(GameObject sample)
@@ -211,15 +211,15 @@ public class HoldObject : MonoBehaviour
       samplerot=sample.gameObject.GetComponent<Transform>().rotation;
       if (sampleTempIndex == 0) //replace sample with split untreated clone
       {
-      sampleClone = sample.GetComponent<SampleFunctions>().clone;
+        sampleClone = sample.GetComponent<SampleFunctions>().clone;
       }
-      if (sampleTempIndex == 1) //replace sample with hot split clone
+        if (sampleTempIndex == 1) //replace sample with hot split clone
       {
-      sampleClone = sample.GetComponent<SampleFunctions>().cloneHot;
+        sampleClone = sample.GetComponent<SampleFunctions>().cloneHot;
       }
       if (sampleTempIndex == 3) //replace sample with cold split clone
       {
-      sampleClone = sample.GetComponent<SampleFunctions>().cloneCold;
+        sampleClone = sample.GetComponent<SampleFunctions>().cloneCold;
       }
       //get rid of sample
       sample.transform.position += new Vector3(-100f, 0,0);
@@ -261,31 +261,31 @@ public class HoldObject : MonoBehaviour
       //move teeth on clamps back to closed position
       if (isHolding && sampletype == "Sample1")
       {
-      isHolding = false;
-      lowleftTooth.transform.position -= new Vector3(.03f,0,0);
-      lowrightTooth.transform.position += new Vector3(.03f,0,0);
-      highleftTooth.transform.position -= new Vector3(.03f,0,0);
-      highrightTooth.transform.position += new Vector3(.03f,0,0);
-     }
+        isHolding = false;
+        lowleftTooth.transform.position -= new Vector3(.03f,0,0);
+        lowrightTooth.transform.position += new Vector3(.03f,0,0);
+        highleftTooth.transform.position -= new Vector3(.03f,0,0);
+        highrightTooth.transform.position += new Vector3(.03f,0,0);
+      }
      if (isHolding && sampletype == "SampleTensile")
       {
-      isHolding = false;
-      lowleftTooth.transform.position += new Vector3(0,0,.0485f);
-      lowrightTooth.transform.position -= new Vector3(0,0,.047f);
-      highleftTooth.transform.position += new Vector3(0,0,.0495f);
-      highrightTooth.transform.position -= new Vector3(0,0,.047f);
+        isHolding = false;
+        lowleftTooth.transform.position += new Vector3(0,0,.0485f);
+        lowrightTooth.transform.position -= new Vector3(0,0,.047f);
+        highleftTooth.transform.position += new Vector3(0,0,.0495f);
+        highrightTooth.transform.position -= new Vector3(0,0,.047f);
 
-      //adjust clamps along y (height) axis if test was completed
-      if (splitting)
-        {
+        //adjust clamps along y (height) axis if test was completed
+        if (splitting)
+          {
             Debug.Log("Reset Was Called");
-        splitting=false;
-        bottomClamp.transform.position += new Vector3(0,deltTot*maxShapeVal/100, 0);
-        topClamp.transform.position -= new Vector3(0,deltTot*maxShapeVal/100, 0);
-        currentShapeVal=0f;
-        lastShapeVal=0f;
-        hasTested=false;
-        deltTot = 0;
+            splitting=false;
+            bottomClamp.transform.position += new Vector3(0,deltTot*maxShapeVal/100, 0);
+            topClamp.transform.position -= new Vector3(0,deltTot*maxShapeVal/100, 0);
+            currentShapeVal=0f;
+            lastShapeVal=0f;
+            hasTested=false;
+            deltTot = 0;
         }
       }
     }
